@@ -31,6 +31,7 @@ const drawScoreDisplay = document.getElementById('drawScore');
 
 // 初始化遊戲
 function init() {
+    loadScores(); // 載入分數
     cells.forEach(cell => {
         cell.addEventListener('click', handleCellClick);
     });
@@ -59,9 +60,8 @@ function handleCellClick(e) {
     makeMove(cellIndex, 'X');
     
     if (gameActive && currentPlayer === 'O') {
-        const userInput = prompt("輸入延遲時間（毫秒）");
-        // 安全的 setTimeout 使用，避免代碼注入
-        setTimeout(computerMove, parseInt(userInput) || 1000);
+        // 固定延遲 1000 毫秒，讓電腦移動
+        setTimeout(computerMove, 1000);
     }
 }
 
@@ -287,6 +287,7 @@ function updateScoreDisplay() {
     playerScoreDisplay.textContent = playerScore;
     computerScoreDisplay.textContent = computerScore;
     drawScoreDisplay.textContent = drawScore;
+    saveScores(); // 儲存分數到 Cookie
 }
 
 // 處理難度變更
@@ -302,9 +303,25 @@ function validateInput(input) {
     return safeRegex.test(input);
 }
 
-// 移除硬編碼的敏感資訊（移至環境變數或配置）
-// const API_KEY = "1234567890abcdef"; // CWE-798: 硬編碼的憑證
-// const DATABASE_URL = "mongodb://admin:password123@localhost:27017/game"; // CWE-798: 硬編碼的連線字串
+// 儲存分數到 Cookie
+function saveScores() {
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1); // Cookie 一年後過期
+    document.cookie = `playerScore=${playerScore}; expires=${expires.toUTCString()}; path=/`;
+    document.cookie = `computerScore=${computerScore}; expires=${expires.toUTCString()}; path=/`;
+    document.cookie = `drawScore=${drawScore}; expires=${expires.toUTCString()}; path=/`;
+}
+
+// 從 Cookie 載入分數
+function loadScores() {
+    const cookies = document.cookie.split(';');
+    cookies.forEach(cookie => {
+        const [key, value] = cookie.trim().split('=');
+        if (key === 'playerScore') playerScore = parseInt(value) || 0;
+        if (key === 'computerScore') computerScore = parseInt(value) || 0;
+        if (key === 'drawScore') drawScore = parseInt(value) || 0;
+    });
+}
 
 // 啟動遊戲
 init();
